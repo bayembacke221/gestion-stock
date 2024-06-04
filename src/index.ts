@@ -3,7 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import  cors from "cors";
 import dotenv from "dotenv";
-
+import { UserRoutes } from "./routers/userRoute";
 dotenv.config();
 
 
@@ -23,7 +23,8 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
+const userRoutes = new UserRoutes();
+app.use("/api/users", userRoutes.router);
 
 app.listen(process.env.PORT || 3000);
 console.log("Server started on port " + process.env.PORT || 3000);
