@@ -11,7 +11,7 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
             return res.status(401).json({ error: true, message: "Utilisateur non authentifié" });
         }
 
-        const userId = AuthService.getUserId(headerAuth);
+        const { userId } = AuthService.getUserId(headerAuth);
 
         if (userId < 0) {
             return res.status(401).json({ error: true, message: "Utilisateur non authentifié" });

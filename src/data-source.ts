@@ -2,6 +2,9 @@ import "reflect-metadata"
 import { DataSource } from "typeorm"
 import { Utilisateur } from "./models/utilisateur"
 import dotenv from "dotenv";
+import { Entreprise } from "./models/entreprise";
+import { Adresse } from "./models/adresse";
+import { Role } from "./models/role";
 
 
 dotenv.config();
@@ -15,7 +18,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME || "gestion_stock",
     synchronize: false,
     logging: false,
-    entities: [Utilisateur],
+    entities: [Utilisateur,Entreprise,Adresse,Role],
     migrations: [],
     subscribers: []
 })

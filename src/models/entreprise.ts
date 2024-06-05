@@ -30,6 +30,4 @@ export class Entreprise extends AbstractEntity{
     @Column({name: 'site_web',type: 'varchar',nullable:false})
     siteWeb!: string;
 
-    @OneToMany(()=>Utilisateur,utilisateurs=>utilisateurs.entreprise)
-    utilisateurs!: Utilisateur[];
 }

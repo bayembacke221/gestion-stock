@@ -31,9 +31,9 @@ export class Utilisateur extends AbstractEntity{
     @Column({name: 'photo',type: 'varchar',nullable:false})
     photo!: string;
 
-    @ManyToOne(()=>Entreprise,entreprise=>entreprise.utilisateurs)
-    @JoinColumn({name: 'entreprise_id'})
-    entreprise!: Entreprise;
+    @ManyToOne(() => Entreprise, entreprise => entreprise.id, { nullable: true })
+    @JoinColumn({ name: 'entreprise_id' })
+    entreprise?: Entreprise;
 
     @OneToMany(()=>Role,roles=>roles.utilisateur,{eager:true})
     roles!: Role[];

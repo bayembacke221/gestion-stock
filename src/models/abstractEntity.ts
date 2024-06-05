@@ -1,5 +1,5 @@
 import {BaseEntity, CreateDateColumn, Entity, PrimaryGeneratedColumn} from "typeorm";
-import {type} from "node:os";
+
 
 @Entity()
 export class AbstractEntity extends BaseEntity{
