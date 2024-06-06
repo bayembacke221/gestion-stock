@@ -16,15 +16,16 @@ class AuthService {
 
     public static generateTokenForUser(user: Utilisateur, roles: string[]): string {
         return jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                roles: roles
-            },
-            AuthService.jwtSecret,
-            { expiresIn: '48h' }
+          {
+            id: user.id,
+            email: user.email,
+            roles: roles || [] 
+          },
+          AuthService.jwtSecret,
+          { expiresIn: '48h' }
         );
-    }
+      }
+    
 
 
 

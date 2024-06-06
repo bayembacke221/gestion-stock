@@ -7,13 +7,16 @@ import {UserService} from "../services/utilisateurService";
 import {Utilisateur} from "../models/utilisateur";
 import {AppDataSource} from "../data-source";
 import {Role} from "../models/role";
+import { RoleService } from "../services/roleService";
 export class UserController {
     private userService!: UserService;
+    private roleService!: RoleService;
 
     constructor() {
         AppDataSource.initialize()
             .then(async () => {
                 this.userService = new UserService(AppDataSource.getRepository(Utilisateur));
+                this.roleService = new RoleService(AppDataSource.getRepository(Role));
             })
             .catch((error) => console.log(error));
     }
@@ -27,61 +30,87 @@ export class UserController {
         }
     }
 
-    async register(req: Request, res: Response) {
-        try {
-            const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-            const user = new Utilisateur();
-            user.email = req.body.email;
-            user.prenom = req.body.prenom;
-            user.nom = req.body.nom;
-            user.password = hashedPassword;
-            user.telephone = req.body.telephone;
-            user.adresse = req.body.adresse;
-            user.dateNaissance = req.body.dateNaissance;
-            user.photo = req.body.photo;
-            user.entreprise = req.body.entreprise;
+    
 
-            // Création des rôles
-            const roles = req.body.roles.map((roleName: string) => {
-                const role = new Role();
-                role.roleName = roleName;
-                role.description = '';
-                role.utilisateur = user;
-                return role;
-            });
-            user.roles = roles;
-
-            const createdUser = await this.userService.create(user);
-            res.status(201).json(createdUser);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
+    // userController.ts
+async register(req: Request, res: Response) {
+    try {
+      const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+      const user = new Utilisateur();
+      user.email = req.body.email;
+      user.prenom = req.body.prenom;
+      user.nom = req.body.nom;
+      user.password = hashedPassword;
+      user.telephone = req.body.telephone;
+      user.adresse = req.body.adresse;
+      user.dateNaissance = req.body.dateNaissance;
+      user.photo = req.body.photo;
+      user.entreprise = req.body.entreprise;
+  
+      // Récupérer ou créer les rôles
+      const roleNames = req.body.roles;
+      const roles = await this.roleService.getRolesByNames(roleNames);
+  
+      // Associer les rôles à l'utilisateur
+      user.roles = roles;
+  
+      const createdUser = await this.userService.create(user);
+  
+      // Sérialisation de l'utilisateur
+      const serializedUser = {
+        id: createdUser.id,
+        email: createdUser.email,
+        prenom: createdUser.prenom,
+        nom: createdUser.nom,
+        telephone: createdUser.telephone,
+        adresse: createdUser.adresse,
+        dateNaissance: createdUser.dateNaissance,
+        photo: createdUser.photo,
+        entreprise: createdUser.entreprise,
+        roles: createdUser.roles.map(role => role.roleName)
+      };
+  
+      res.status(201).json(serializedUser);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
+  }
 
-    async login(req: Request, res: Response) {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'L\'adresse email et le mot de passe sont requis' });
-        }
-
-        try {
-            const user = await this.userService.getByFilter({ email });
-            if (!user) {
-                return res.status(401).json({ message: 'Adresse email incorrecte' });
-            }
-
-            const passwordVerif = await bcrypt.compare(password, user.password);
-            if (!passwordVerif) {
-                return res.status(401).json({ message: 'Mot de passe incorrect' });
-            }
-
-            // Ajouter les rôles de l'utilisateur dans le token
-            const token = AuthService.generateTokenForUser(user, user.roles.map((role) => role.roleName));
-            return res.status(200).json({ user, token });
-        } catch (error) {
-            return res.status(500).json({ message: 'Erreur serveur' });
-        }
+    // userController.ts
+async login(req: Request, res: Response) {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'L\'adresse email et le mot de passe sont requis' });
     }
+  
+    try {
+      const user = await this.userService.getByFilter({ email });
+      if (!user) {
+        return res.status(401).json({ message: 'Adresse email incorrecte' });
+      }
+  
+      const passwordVerif = await bcrypt.compare(password, user.password);
+      if (!passwordVerif) {
+        return res.status(401).json({ message: 'Mot de passe incorrect' });
+      }
+  
+      // Vérifiez si user.roles existe avant d'appeler map
+      const roleNames = user.roles ? user.roles.map(role => role.roleName) : [];
+      const token = AuthService.generateTokenForUser(user, roleNames);
+      const serializedUser = {
+        id: user.id,
+        email: user.email,
+        prenom: user.prenom,
+        nom: user.nom,
+        roles: roleNames
+      };
+  
+      return res.status(200).json({ user: serializedUser, token });
+    } catch (error) {
+      console.error('Erreur lors de la connexion :', error);
+      return res.status(500).json({ message: 'Erreur serveur' });
+    }
+  }
 
     async updateUser(req: AuthRequest, res: Response) {
         try {

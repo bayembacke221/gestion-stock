@@ -24,11 +24,7 @@ export abstract class AbstractService<T extends ObjectLiteral> {
         return data.length <= 0
     }
 
-    async getByFilter(filter: FindOptionsWhere<T>): Promise<T | null> {
-        return await this.repository.findOne(
-            {where: filter}
-        )
-    }
+
 
     async create(data: DeepPartial<T>): Promise<T> {
         return await this.repository.save(data);
